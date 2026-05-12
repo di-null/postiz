@@ -1,0 +1,158 @@
+services:
+
+  # ==================== MAIN POSTIZ APP ==================== #
+
+  postiz:
+    image: ghcr.io/gitroomhq/postiz-app:latest
+    container_name: postiz 
+    restart: always
+    environment:
+      # Main URLs configuration. HTTP for localhost. HTTPS for custom domains
+      MAIN_URL: "https://${POSTIZ_HOST}"                    
+      FRONTEND_URL: "https://${POSTIZ_HOST}"                
+      NEXT_PUBLIC_BACKEND_URL: "https://${POSTIZ_HOST}/api"
+
+      # Security - this secret is used to sign login tokens
+      # You can use 'openssl rand -hex 32' terminal command to generate one
+      JWT_SECRET: "${JWT_SECRET}"
+
+      # Database connection string - points to the postgres container inside Docker
+      DATABASE_URL: "postgresql://${POSTIZ_DB_USER}:${POSTIZ_DB_PASSWORD}@postiz-postgres:5432/${POSTIZ_DB_NAME}"
+
+      # Redis connection (used for queues and caching)
+      REDIS_URL: "redis://postiz-redis:6379"
+
+      # How the Postiz app talks to itself internally (inside the container)
+      BACKEND_INTERNAL_URL: "http://localhost:3000"
+
+      # Temporal is the background job system - this tells Postiz where to find it
+      TEMPORAL_ADDRESS: "temporal:7233"
+
+      # General settings for self-hosted version
+      IS_GENERAL: "true"
+      DISABLE_REGISTRATION: "false"  # Set to "true" after you create your first account
+      RUN_CRON: "true"               # Enables scheduled posts and background tasks
+
+      # Storage - we use simple local files on your server
+      STORAGE_PROVIDER: "local"
+      UPLOAD_DIRECTORY: "/uploads"
+      NEXT_PUBLIC_UPLOAD_DIRECTORY: "/uploads"
+    volumes:
+      - postiz-config:/config/      # Saves all your Postiz settings
+      - postiz-uploads:/uploads/    # Stores uploaded images/videos
+    depends_on:
+      postiz-postgres:
+        condition: service_healthy
+      postiz-redis:
+        condition: service_healthy
+      temporal:
+        condition: service_started
+    networks:
+      - postiz-network
+      - temporal-network
+
+  # ==================== POSTGRES DATABASE ==================== #
+
+  postiz-postgres:
+    image: postgres:17-alpine
+    container_name: postiz-postgres
+    restart: always
+    environment:
+      # These are the credentials for the Postiz database
+      POSTGRES_USER: "${POSTIZ_DB_USER}"
+      POSTGRES_PASSWORD: "${POSTIZ_DB_PASSWORD}"
+      POSTGRES_DB: "${POSTIZ_DB_NAME}"
+    volumes:
+      - postiz-postgres-data:/var/lib/postgresql/data   # All your data is saved here
+    healthcheck:
+      test: pg_isready -U ${POSTIZ_DB_USER} -d ${POSTIZ_DB_NAME}
+      interval: 10s
+      timeout: 3s
+      retries: 3
+    networks:
+      - postiz-network
+
+  # ==================== REDIS QUEUE SYSTEM ==================== #
+
+  postiz-redis:
+    image: redis:7.2
+    container_name: postiz-redis    
+    restart: always
+    healthcheck:
+      test: redis-cli ping
+      interval: 10s
+      timeout: 3s
+      retries: 3
+    volumes:
+      - postiz-redis-data:/data
+    networks:
+      - postiz-network
+
+  # ==================== TEMPORAL BACKGROUND ENGINE ==================== #
+
+  # Temporal runs all scheduled posts reliably
+  temporal:
+    image: temporalio/auto-setup:1.28.1
+    container_name: temporal
+    restart: always
+    depends_on:
+      - temporal-postgres
+      - temporal-elasticsearch
+    environment:
+      # Temporal uses these to connect to its own postgres
+      DB: postgres12
+      DB_PORT: 5432
+      POSTGRES_USER: "${TEMPORAL_DB_USER}"
+      POSTGRES_PWD: "${TEMPORAL_DB_PASSWORD}"
+      POSTGRES_SEEDS: temporal-postgres
+      ENABLE_ES: "true"
+      ES_SEEDS: temporal-elasticsearch
+      ES_VERSION: v7
+      TEMPORAL_NAMESPACE: default
+    networks:
+      - temporal-network
+
+  # Temporal uses it is own database
+  temporal-postgres:
+    image: postgres:16
+    container_name: temporal-postgres
+    restart: always
+    environment:
+      # Credentials for Temporal's own database (completely separate from Postiz DB)
+      POSTGRES_USER: "${TEMPORAL_DB_USER}"
+      POSTGRES_PASSWORD: "${TEMPORAL_DB_PASSWORD}"
+    volumes:
+      - temporal-postgres-data:/var/lib/postgresql/data
+    networks:
+      - temporal-network
+         
+  temporal-elasticsearch:
+    image: elasticsearch:7.17.27
+    container_name: temporal-elasticsearch
+    restart: always
+    environment:
+      discovery.type: single-node
+      xpack.security.enabled: "false"
+      ES_JAVA_OPTS: "-Xms256m -Xmx256m"
+    volumes:
+      - temporal-elasticsearch-data:/usr/share/elasticsearch/data
+    networks:
+      - temporal-network
+
+# ==================== VOLUMES PERSISTENCE STORAGE ==================== #
+
+volumes:
+  postiz-config:
+  postiz-uploads:
+  postiz-postgres-data:
+  postiz-redis-data:
+  temporal-elasticsearch-data:
+  temporal-postgres-data:
+
+# ==================== NETWORKS ==================== #
+
+# Postiz and Temporal should have their own networks 
+networks:
+  postiz-network:
+  temporal-network:
+         
