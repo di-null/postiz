@@ -6,13 +6,13 @@
 - You can use my `docker-compose.yaml`. This version here is the cleanest I was able to make so far.
 
 ## Environmental Variables
-POSTIZ_HOST=`your custom domain or localhost`
-POSTIZ_DB_NAME=`you can use any (e.g. postiz)`
-POSTIZ_DB_USER=`you can use any (e.g. postiz)`
-POSTIZ_DB_PASSWORD=`your preferable password (I used password manager to generate me one)`
-TEMPORAL_DB_USER=`you can use any (e.g. temporal)`
-TEMPORAL_DB_PASSWORD=`your preferable password (I used password manager to generate me one)`
-JWT_SECRET=`generate one using terminal command: openssl rand -hex 32`
+- POSTIZ_HOST=`your custom domain or localhost`
+- POSTIZ_DB_NAME=`you can use any (e.g. postiz)`
+- POSTIZ_DB_USER=`you can use any (e.g. postiz)`
+- POSTIZ_DB_PASSWORD=`your preferable password (I used password manager to generate me one)`
+- TEMPORAL_DB_USER=`you can use any (e.g. temporal)`
+- TEMPORAL_DB_PASSWORD=`your preferable password (I used password manager to generate me one)`
+- JWT_SECRET=`generate one using terminal command: openssl rand -hex 32`
 
 ## Custom domain/subdomain setup
 I recommend using subdomain so you can use the same domain name for different services running on your server.
