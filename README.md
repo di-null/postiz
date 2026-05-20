@@ -32,4 +32,52 @@ Go to your tunnel in Zero Trust -> Published application routes -> Add new route
 - URL: `127.0.0.1:443` (This is url to `Traefik` that is running on `Dokploy` by default that will reverse proxy request to your `Postiz`)
 - Origin request and connection settings -> TLS -> No TLS Verify: `On` (This will allow to accept certificate from `Traefik`)
 
-### Wish you good luck :)
+## Channels
+### TikTok
+#### Postiz Configuration
+
+- Add there properties to Postiz configuration file under `postiz/environment`
+- Create corresponding environmental variables and assign `Client Key` and `Client Secret` values to them. `Client Key` and `Client Secret` you should be taken from your application configuration inside TikTok Developers account.
+
+```
+TIKTOK_CLIENT_ID: "${TIKTOK_CLIENT_ID}"
+TIKTOK_CLIENT_SECRET: "${TIKTOK_CLIENT_SECRET}"
+```
+
+#### Application settings
+##### Description
+```
+This is for personal use with self-hosted instance of Postiz for scheduling my own social media content.
+```
+##### Terms of Service and Privacy Policy
+Inside `/uploads` folder execute next commands:
+
+```
+cat > terms.html << 'EOF'
+<!DOCTYPE html>
+<html>
+<head><title>Terms of Service</title></head>
+<body>
+<h1>Postiz Terms of Service</h1>
+<p>This is a personal self-hosted instance of Postiz running on my private Dokploy server.</p>
+<p>It is used only by me to schedule and post content to my own social media accounts.</p>
+<p>Last updated: May 2026</p>
+</body>
+</html>
+EOF
+```
+
+```
+cat > privacy.html << 'EOF'
+<!DOCTYPE html>
+<html>
+<head><title>Privacy Policy</title></head>
+<body>
+<h1>Postiz Privacy Policy</h1>
+<p>This self-hosted Postiz tool only stores data on my own server.</p>
+<p>No data is shared with third parties except when I explicitly ask it to post to TikTok.</p>
+<p>Last updated: May 2026</p>
+</body>
+</html>
+EOF
+```
