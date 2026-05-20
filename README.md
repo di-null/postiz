@@ -81,3 +81,20 @@ cat > privacy.html << 'EOF'
 </html>
 EOF
 ```
+
+##### Products to Add
+- `Login Kit`
+- `Content Posting API`
+
+##### Login Kit Web URL
+```
+https://<subdomain.yourdomain.whatever>/integrations/social/tiktok
+```
+
+##### Scopes
+- `user.info.basic` (Added automatically with `Login Kit` product)
+- `video.publish` (Added automatically with `Content Posting API` product)
+- `video.upload` (Added automatically with `Content Posting API` product)
+- `user.info.profile` (Add manually)
+- `user.info.stats` (Add manually)
+- `video.list` (Add manually)
