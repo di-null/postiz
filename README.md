@@ -32,6 +32,32 @@ Go to your tunnel in Zero Trust -> Published application routes -> Add new route
 - URL: `127.0.0.1:443` (This is url to `Traefik` that is running on `Dokploy` by default that will reverse proxy request to your `Postiz`)
 - Origin request and connection settings -> TLS -> No TLS Verify: `On` (This will allow to accept certificate from `Traefik`)
 
+## Temporal
+If you like to add Web UI for Temporal to be able to troubleshoot posting add this configuration to `docker-compose.yaml` file.
+After deploying it will be accessible via your server ip address on port 8080.
+
+```
+  # ==================== TEMPORAL WEB UI ==================== #
+  temporal-ui:
+    image: temporalio/ui:latest
+    container_name: temporal-ui
+    restart: always
+    environment:
+      # Tell the UI where to connect to Temporal
+      TEMPORAL_ADDRESS: temporal:7233
+      # Allow access from your browser (important)
+      TEMPORAL_CORS_ORIGINS: "*"
+      # Allow managing workflows duiring direct connection via IP
+      TEMPORAL_CSRF_COOKIE_INSECURE: "true"
+      TEMPORAL_AUTH_ENABLED: "false"
+    ports:
+      - "8080:8080"
+    depends_on:
+      - temporal
+    networks:
+      - temporal-network
+```
+
 ## Channels
 ### TikTok
 #### Postiz Configuration
